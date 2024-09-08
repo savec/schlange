@@ -17,6 +17,7 @@ use buttons::try_get_code;
 use defmt::info;
 use embassy_time::Timer;
 use fmt::unwrap;
+use heapless::FnvIndexSet;
 use led::send_frame;
 use micro_rand::Random;
 use rb::RingBuffer;
@@ -56,7 +57,7 @@ enum Direction {
     West,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, Hash)]
 struct Coordinate {
     row: u8,
     col: u8,
@@ -64,6 +65,7 @@ struct Coordinate {
 
 struct Game {
     snake: RingBuffer<Coordinate, 25>,
+    no_snake: FnvIndexSet<Coordinate, 32>,
     direction: Direction,
     food: Coordinate,
     rnd: Random,
@@ -77,56 +79,45 @@ enum SnakeError {
 enum MoveResult {
     Trivial,
     BiteYourself,
-    AteSomething,
-    ItIsDone,
+    Win,
 }
 
 impl Game {
     fn new() -> Self {
-        let mut snake: RingBuffer<Coordinate, 25> = RingBuffer::new();
-        snake.put(Coordinate { row: 2, col: 2 }).unwrap();
+        let snake: RingBuffer<Coordinate, 25> = RingBuffer::new();
+        let mut no_snake: FnvIndexSet<Coordinate, 32> = FnvIndexSet::new();
+        for row in 0..5 {
+            for col in 0..5 {
+                let _ = no_snake.insert(Coordinate { row, col });
+            }
+        }
+
         // TODO add seed
         let rnd = Random::new(1234);
 
         let mut game = Game {
             direction: Direction::North,
             snake,
+            no_snake,
             rnd,
             food: Default::default(),
         };
 
+        game.snake_add_head(Coordinate { row: 2, col: 2 }).unwrap();
         game.give_food();
         game
     }
 
     fn is_snake(&self, coordinate: Coordinate) -> bool {
-        for c in self.snake.iter() {
-            if c.row == coordinate.row && c.col == coordinate.col {
-                return true;
-            }
-        }
-        false
+        !self.no_snake.contains(&coordinate)
     }
 
     fn give_food(&mut self) {
-        let base = self.snake.capacity() - self.snake.len();
-        let random = self.rnd.next_int_i32(0, base as i32 - 1);
-        info!("random: {}", random);
-        let mut count = 0;
-        for row in 0..5 {
-            for col in 0..5 {
-                let coordinate = Coordinate { row, col };
-                if self.is_snake(coordinate) {
-                    continue;
-                }
-                if count == random {
-                    self.food = coordinate;
-                    return;
-                }
-                count += 1;
-            }
+        let empty_count = self.no_snake.len() as i32;
+        if empty_count > 0 {
+            let random = self.rnd.next_int_i32(0, empty_count - 1);
+            self.food = *self.no_snake.iter().nth(random as usize).unwrap();
         }
-        panic!();
     }
 
     fn update_direction(&mut self, input: ButtonCode) {
@@ -173,27 +164,23 @@ impl Game {
         }
     }
 
+    fn is_food(&self, coordinate: Coordinate) -> bool {
+        self.food == coordinate
+    }
+
     fn do_move(&mut self) -> Result<MoveResult, SnakeError> {
         let new_head = self.get_new_head_coordinate();
         // info!("new_head is {} {}", new_head.row, new_head.col);
-        if self.food.row == new_head.row && self.food.col == new_head.col {
-            let result = match self.snake.put(new_head) {
-                Ok(_) => Ok(MoveResult::AteSomething),
-                Err(_) => Ok(MoveResult::ItIsDone),
-            };
-            self.give_food();
-            return result;
-        }
         if self.is_snake(new_head) {
-            return Ok(MoveResult::BiteYourself);
+            Ok(MoveResult::BiteYourself)
         } else {
-            // check if there is food in position of new head. If there is - then don't cut the tail
-            let _ = self.snake.get().map_err(|_| SnakeError::Fatal)?;
-        }
-
-        match self.snake.put(new_head) {
-            Ok(_) => Ok(MoveResult::Trivial),
-            Err(_) => Ok(MoveResult::ItIsDone),
+            let result = self.snake_add_head(new_head);
+            if self.is_food(new_head) {
+                self.give_food();
+            } else {
+                self.snake_cut_tail()?;
+            }
+            result
         }
     }
 
@@ -208,6 +195,20 @@ impl Game {
             PixelState::Blinking(BlinkingPixel::new());
 
         frame
+    }
+
+    fn snake_add_head(&mut self, coordinate: Coordinate) -> Result<MoveResult, SnakeError> {
+        self.no_snake.remove(&coordinate);
+        match self.snake.put(coordinate) {
+            Ok(_) => Ok(MoveResult::Trivial),
+            Err(_) => Ok(MoveResult::Win),
+        }
+    }
+
+    fn snake_cut_tail(&mut self) -> Result<MoveResult, SnakeError> {
+        let tail = self.snake.get().map_err(|_| SnakeError::Fatal)?;
+        let _ = self.no_snake.insert(tail);
+        Ok(MoveResult::Trivial)
     }
 }
 
@@ -235,8 +236,7 @@ async fn main(spawner: Spawner) {
                         info!("BiteYourself");
                         break;
                     }
-                    MoveResult::AteSomething => (),
-                    MoveResult::ItIsDone => {
+                    MoveResult::Win => {
                         info!("Done");
                         break;
                     }
