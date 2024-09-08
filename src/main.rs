@@ -1,25 +1,29 @@
 #![no_std]
 #![no_main]
 
+mod buttons;
 mod fmt;
-use core::panic;
+mod led;
 
+use crate::buttons::btn_task;
+use crate::buttons::ButtonCode;
+use crate::led::led_task;
+use crate::led::BlinkingPixel;
+use crate::led::Frame;
+use crate::led::PixelState;
+
+use buttons::try_get_code;
 use defmt::info;
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
-use embassy_time::{Duration, Timer};
+use embassy_time::Timer;
 use fmt::unwrap;
+use led::send_frame;
 use micro_rand::Random;
-#[cfg(not(feature = "defmt"))]
-use panic_halt as _;
 #[cfg(feature = "defmt")]
 use {defmt_rtt as _, panic_probe as _};
 
 use assign_resources::assign_resources;
 use embassy_executor::Spawner;
-use embassy_nrf::{
-    config::Config,
-    gpio::{AnyPin, Input, Level, Output, OutputDrive, Pull},
-};
+use embassy_nrf::config::Config;
 use embassy_nrf::{config::HfclkSource, peripherals};
 
 assign_resources! {
@@ -43,183 +47,6 @@ assign_resources! {
     }
     // add more resources to more structs if needed, for example defining one struct for each task
 }
-// go for the signal because we can, 50-bytes transaction per 100-500 ms is not of a big deal
-static FRAME_SIGNAL: Signal<CriticalSectionRawMutex, Frame> = Signal::new();
-
-struct LedMatrix<'a> {
-    cols: [Output<'a>; 5],
-    rows: [Output<'a>; 5],
-    frame: Frame,
-}
-
-impl<'a> LedMatrix<'a> {
-    fn new(pins: LedPins) -> Self {
-        LedMatrix {
-            rows: [
-                Output::new(pins.row1_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.row2_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.row3_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.row4_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.row5_pin, Level::Low, OutputDrive::Standard),
-            ],
-            cols: [
-                Output::new(pins.col1_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.col2_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.col3_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.col4_pin, Level::Low, OutputDrive::Standard),
-                Output::new(pins.col5_pin, Level::Low, OutputDrive::Standard),
-            ],
-            frame: Default::default(),
-        }
-    }
-
-    fn set_frame(&mut self, frame: Frame) {
-        self.frame = frame;
-    }
-
-    async fn drive(&mut self) {
-        for (frame_rows, col_led) in self.frame.buffer.iter_mut().zip(self.cols.iter_mut()) {
-            col_led.set_low();
-            for (frame_row, row_led) in frame_rows.iter_mut().zip(self.rows.iter_mut()) {
-                match *frame_row {
-                    PixelState::Off => {
-                        Timer::after_micros(1000).await;
-                    }
-                    PixelState::Solid(l) => {
-                        row_led.set_high();
-                        Timer::after_micros(l as u64).await;
-                        row_led.set_low();
-                        Timer::after_micros(1000 - l as u64).await;
-                    }
-                    PixelState::Blinking(mut state) => {
-                        row_led.set_high();
-                        Timer::after_micros(state.brightness as u64).await;
-                        row_led.set_low();
-                        Timer::after_micros(1000 - state.brightness as u64).await;
-                        state.process();
-                        *frame_row = PixelState::Blinking(state);
-                    }
-                };
-            }
-            col_led.set_high();
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy)]
-enum PixelState {
-    #[default]
-    Off,
-    Solid(i32),
-    Blinking(BlinkingPixel<0, 1000, 50>),
-}
-
-#[derive(Default, Debug, Clone, Copy)]
-struct BlinkingPixel<const MIN: i32, const MAX: i32, const STEP: i32> {
-    fading: bool,
-    brightness: i32,
-}
-
-impl<const MIN: i32, const MAX: i32, const STEP: i32> BlinkingPixel<MIN, MAX, STEP> {
-    fn new() -> Self {
-        BlinkingPixel {
-            fading: true,
-            brightness: MAX,
-        }
-    }
-
-    fn process(&mut self) {
-        self.fading = match self.fading {
-            true => {
-                self.brightness -= STEP;
-                if self.brightness > MIN {
-                    true
-                } else {
-                    self.brightness = MIN;
-                    false
-                }
-            }
-            false => {
-                self.brightness += STEP;
-                if self.brightness < MAX {
-                    false
-                } else {
-                    self.brightness = MAX;
-                    true
-                }
-            }
-        };
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy)]
-struct Frame {
-    buffer: [[PixelState; 5]; 5],
-}
-
-impl Frame {
-    fn new() -> Self {
-        Frame {
-            ..Default::default()
-        }
-    }
-}
-
-#[embassy_executor::task]
-async fn led_task(pins: LedPins) {
-    let mut led_matrix = LedMatrix::new(pins);
-    loop {
-        if let Some(frame) = FRAME_SIGNAL.try_take() {
-            led_matrix.set_frame(frame);
-        }
-        led_matrix.drive().await;
-    }
-}
-
-struct Debouncer<'a> {
-    input: Input<'a>,
-    debounce: Duration,
-}
-
-impl<'a> Debouncer<'a> {
-    pub fn new(input: Input<'a>, debounce: Duration) -> Self {
-        Self { input, debounce }
-    }
-
-    pub async fn debounce(&mut self) -> Level {
-        loop {
-            let l1 = self.input.get_level();
-
-            self.input.wait_for_any_edge().await;
-
-            Timer::after(self.debounce).await;
-
-            let l2 = self.input.get_level();
-            if l1 != l2 {
-                break l2;
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum ButtonCode {
-    PressedA,
-    PressedB,
-}
-
-static BUTTON_SIGNAL: Signal<CriticalSectionRawMutex, ButtonCode> = Signal::new();
-
-#[embassy_executor::task(pool_size = 2)]
-async fn btn_task(btn: AnyPin, btn_signal: ButtonCode) {
-    let mut btn = Debouncer::new(Input::new(btn, Pull::None), Duration::from_millis(20));
-    loop {
-        if btn.debounce().await == Level::Low {
-            BUTTON_SIGNAL.signal(btn_signal);
-        }
-    }
-}
-
 enum Direction {
     North,
     Ost,
@@ -480,7 +307,7 @@ async fn main(spawner: Spawner) {
         info!("Schhhh");
         loop {
             Timer::after_millis(500).await;
-            if let Some(btn_signal) = BUTTON_SIGNAL.try_take() {
+            if let Some(btn_signal) = try_get_code() {
                 game.update_direction(btn_signal);
             }
             if let Ok(res) = game.do_move() {
@@ -500,7 +327,7 @@ async fn main(spawner: Spawner) {
                 info!("Fatal");
                 break;
             }
-            FRAME_SIGNAL.signal(game.get_frame());
+            send_frame(game.get_frame());
         }
     }
 }
