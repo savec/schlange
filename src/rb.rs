@@ -10,6 +10,7 @@ pub enum RbError {
     IsEmpty,
 }
 
+#[allow(dead_code)]
 impl<T, const CAP: usize> RingBuffer<T, CAP>
 where
     T: Default + Copy,

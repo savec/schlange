@@ -9,16 +9,15 @@ mod rb;
 use crate::buttons::btn_task;
 use crate::buttons::ButtonCode;
 use crate::led::led_task;
-use crate::led::BlinkingPixel;
-use crate::led::Frame;
-use crate::led::PixelState;
 
 use buttons::try_get_code;
 use defmt::info;
 use embassy_time::Timer;
 use fmt::unwrap;
 use heapless::FnvIndexSet;
-use led::send_frame;
+use led::send_snapshot;
+use led::CellState;
+use led::Snapshot;
 use micro_rand::Random;
 use rb::RingBuffer;
 #[cfg(feature = "defmt")]
@@ -184,17 +183,17 @@ impl Game {
         }
     }
 
-    fn get_frame(&mut self) -> Frame {
-        let mut frame = Frame::new();
+    fn get_snapshot(&mut self) -> Snapshot {
+        let mut snapshot = Snapshot::new();
+
         for c in self.snake.iter() {
-            frame.buffer[c.col as usize][c.row as usize] = PixelState::Solid(100);
+            snapshot.buffer[c.col as usize][c.row as usize] = CellState::SnakeTail;
         }
         let head = self.snake.peek_head();
-        frame.buffer[head.col as usize][head.row as usize] = PixelState::Solid(1000);
-        frame.buffer[self.food.col as usize][self.food.row as usize] =
-            PixelState::Blinking(BlinkingPixel::new());
+        snapshot.buffer[head.col as usize][head.row as usize] = CellState::SnakeHead;
+        snapshot.buffer[self.food.col as usize][self.food.row as usize] = CellState::Food;
 
-        frame
+        snapshot
     }
 
     fn snake_add_head(&mut self, coordinate: Coordinate) -> Result<MoveResult, SnakeError> {
@@ -246,7 +245,7 @@ async fn main(spawner: Spawner) {
                 info!("Fatal");
                 break;
             }
-            send_frame(game.get_frame());
+            send_snapshot(&game.get_snapshot());
         }
     }
 }

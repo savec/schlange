@@ -5,7 +5,7 @@ use embassy_time::Timer;
 use crate::LedPins;
 
 // go for the signal because we can, 50-bytes transaction per 100-500 ms is not of a big deal
-pub static FRAME_SIGNAL: Signal<CriticalSectionRawMutex, Frame> = Signal::new();
+pub static SNAPSHOT_SIGNAL: Signal<CriticalSectionRawMutex, Snapshot> = Signal::new();
 
 struct LedMatrix<'a> {
     cols: [Output<'a>; 5],
@@ -36,6 +36,10 @@ impl<'a> LedMatrix<'a> {
 
     fn set_frame(&mut self, frame: Frame) {
         self.frame = frame;
+    }
+
+    fn get_frame(&self) -> &Frame {
+        &self.frame
     }
 
     async fn drive(&mut self) {
@@ -72,7 +76,7 @@ pub enum PixelState {
     #[default]
     Off,
     Solid(i32),
-    Blinking(BlinkingPixel<0, 1000, 50>),
+    Blinking(BlinkingPixel<0, 1000, 100>),
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -114,7 +118,7 @@ impl<const MIN: i32, const MAX: i32, const STEP: i32> BlinkingPixel<MIN, MAX, ST
 }
 
 #[derive(Default, Debug, Clone, Copy)]
-pub struct Frame {
+struct Frame {
     pub buffer: [[PixelState; 5]; 5],
 }
 
@@ -126,16 +130,73 @@ impl Frame {
     }
 }
 
-pub fn send_frame(frame: Frame) {
-    FRAME_SIGNAL.signal(frame);
+#[derive(Default, Debug, Clone, Copy)]
+pub struct Snapshot {
+    pub buffer: [[CellState; 5]; 5],
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CellState {
+    #[default]
+    Empty,
+    SnakeHead,
+    SnakeTail,
+    Food,
+}
+
+impl Snapshot {
+    pub fn new() -> Self {
+        Snapshot {
+            ..Default::default()
+        }
+    }
+}
+
+pub fn send_snapshot(snapshot: &Snapshot) {
+    SNAPSHOT_SIGNAL.signal(*snapshot);
+}
+
+#[derive(Default, Debug)]
+struct Render {
+    prev_snapshot: Snapshot,
+}
+
+impl Render {
+    fn new() -> Self {
+        Render {
+            ..Default::default()
+        }
+    }
+    fn render(&mut self, snapshot: Snapshot, current_frame: &Frame) -> Frame {
+        let mut frame = Frame::new();
+        for (col, frame_cols) in frame.buffer.iter_mut().enumerate() {
+            for (row, frame_pixel) in frame_cols.iter_mut().enumerate() {
+                *frame_pixel = match snapshot.buffer[col][row] {
+                    CellState::Empty => PixelState::Off,
+                    CellState::SnakeHead => PixelState::Solid(1000),
+                    CellState::SnakeTail => PixelState::Solid(100),
+                    CellState::Food => {
+                        if self.prev_snapshot.buffer[col][row] == CellState::Food {
+                            current_frame.buffer[col][row]
+                        } else {
+                            PixelState::Blinking(BlinkingPixel::new())
+                        }
+                    }
+                }
+            }
+        }
+        self.prev_snapshot = snapshot;
+        frame
+    }
 }
 
 #[embassy_executor::task]
 pub async fn led_task(pins: LedPins) {
     let mut led_matrix = LedMatrix::new(pins);
+    let mut render = Render::new();
     loop {
-        if let Some(frame) = FRAME_SIGNAL.try_take() {
-            led_matrix.set_frame(frame);
+        if let Some(frame) = SNAPSHOT_SIGNAL.try_take() {
+            led_matrix.set_frame(render.render(frame, led_matrix.get_frame()));
         }
         led_matrix.drive().await;
     }
