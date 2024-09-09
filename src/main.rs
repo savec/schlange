@@ -183,7 +183,7 @@ impl Game {
         }
     }
 
-    fn get_snapshot(&mut self) -> Snapshot {
+    fn get_snapshot(&mut self) -> Snapshot<5, 5> {
         let mut snapshot = Snapshot::new();
 
         for c in self.snake.iter() {

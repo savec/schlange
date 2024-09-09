@@ -5,15 +5,15 @@ use embassy_time::Timer;
 use crate::LedPins;
 
 // go for the signal because we can, 50-bytes transaction per 100-500 ms is not of a big deal
-pub static SNAPSHOT_SIGNAL: Signal<CriticalSectionRawMutex, Snapshot> = Signal::new();
+pub static SNAPSHOT_SIGNAL: Signal<CriticalSectionRawMutex, Snapshot<5, 5>> = Signal::new();
 
-struct LedMatrix<'a> {
-    cols: [Output<'a>; 5],
-    rows: [Output<'a>; 5],
-    frame: Frame,
+struct LedMatrix<'a, const NCOLS: usize, const NROWS: usize> {
+    cols: [Output<'a>; NCOLS],
+    rows: [Output<'a>; NROWS],
+    frame: Frame<5, 5>,
 }
 
-impl<'a> LedMatrix<'a> {
+impl<'a> LedMatrix<'a, 5, 5> {
     fn new(pins: LedPins) -> Self {
         LedMatrix {
             rows: [
@@ -30,15 +30,15 @@ impl<'a> LedMatrix<'a> {
                 Output::new(pins.col4_pin, Level::Low, OutputDrive::Standard),
                 Output::new(pins.col5_pin, Level::Low, OutputDrive::Standard),
             ],
-            frame: Default::default(),
+            frame: Frame::new(),
         }
     }
 
-    fn set_frame(&mut self, frame: Frame) {
+    fn set_frame(&mut self, frame: Frame<5, 5>) {
         self.frame = frame;
     }
 
-    fn get_frame(&self) -> &Frame {
+    fn get_frame(&self) -> &Frame<5, 5> {
         &self.frame
     }
 
@@ -117,22 +117,22 @@ impl<const MIN: i32, const MAX: i32, const STEP: i32> BlinkingPixel<MIN, MAX, ST
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
-struct Frame {
-    pub buffer: [[PixelState; 5]; 5],
+#[derive(Debug, Clone, Copy)]
+struct Frame<const NCOLS: usize, const NROWS: usize> {
+    pub buffer: [[PixelState; NCOLS]; NROWS],
 }
 
-impl Frame {
+impl Frame<5, 5> {
     pub fn new() -> Self {
         Frame {
-            ..Default::default()
+            buffer: Default::default(),
         }
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
-pub struct Snapshot {
-    pub buffer: [[CellState; 5]; 5],
+#[derive(Debug, Clone, Copy)]
+pub struct Snapshot<const NCOLS: usize, const NROWS: usize> {
+    pub buffer: [[CellState; NCOLS]; NROWS],
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -144,30 +144,30 @@ pub enum CellState {
     Food,
 }
 
-impl Snapshot {
+impl Snapshot<5, 5> {
     pub fn new() -> Self {
         Snapshot {
-            ..Default::default()
+            buffer: Default::default(),
         }
     }
 }
 
-pub fn send_snapshot(snapshot: &Snapshot) {
+pub fn send_snapshot(snapshot: &Snapshot<5, 5>) {
     SNAPSHOT_SIGNAL.signal(*snapshot);
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct Render {
-    prev_snapshot: Snapshot,
+    prev_snapshot: Snapshot<5, 5>,
 }
 
 impl Render {
     fn new() -> Self {
         Render {
-            ..Default::default()
+            prev_snapshot: Snapshot::new(),
         }
     }
-    fn render(&mut self, snapshot: Snapshot, current_frame: &Frame) -> Frame {
+    fn render(&mut self, snapshot: Snapshot<5, 5>, current_frame: &Frame<5, 5>) -> Frame<5, 5> {
         let mut frame = Frame::new();
         for (col, frame_cols) in frame.buffer.iter_mut().enumerate() {
             for (row, frame_pixel) in frame_cols.iter_mut().enumerate() {
