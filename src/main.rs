@@ -186,11 +186,12 @@ impl Game {
     fn get_snapshot(&mut self) -> Snapshot<5, 5> {
         let mut snapshot = Snapshot::new();
 
-        for c in self.snake.iter() {
-            snapshot.buffer[c.col as usize][c.row as usize] = CellState::SnakeTail;
-        }
-        let head = self.snake.peek_head();
+        let mut snake_iter = self.snake.iter();
+        let head = snake_iter.next().unwrap();
         snapshot.buffer[head.col as usize][head.row as usize] = CellState::SnakeHead;
+        for tail in snake_iter {
+            snapshot.buffer[tail.col as usize][tail.row as usize] = CellState::SnakeTail;
+        }
         snapshot.buffer[self.food.col as usize][self.food.row as usize] = CellState::Food;
 
         snapshot

@@ -58,7 +58,7 @@ where
     pub fn iter(&self) -> RingBufferIterator<T, CAP> {
         RingBufferIterator {
             rb: self,
-            tail: self.tail,
+            head: self.head,
         }
     }
 }
@@ -67,11 +67,11 @@ impl<'a, T, const CAP: usize> Iterator for RingBufferIterator<'a, T, CAP> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.rb.head == self.tail {
+        if self.rb.tail == self.head {
             None
         } else {
-            let elem = &self.rb.rb[self.tail];
-            self.tail = (self.tail + 1) % CAP;
+            self.head = (self.head + CAP - 1) % CAP;
+            let elem = &self.rb.rb[self.head];
             Some(elem)
         }
     }
@@ -79,5 +79,5 @@ impl<'a, T, const CAP: usize> Iterator for RingBufferIterator<'a, T, CAP> {
 
 pub struct RingBufferIterator<'a, T, const CAP: usize> {
     rb: &'a RingBuffer<T, CAP>,
-    tail: usize,
+    head: usize,
 }
