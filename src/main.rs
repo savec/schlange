@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+mod animation;
 mod buttons;
 mod fmt;
 mod led;
@@ -10,6 +11,7 @@ use crate::buttons::btn_task;
 use crate::buttons::ButtonCode;
 use crate::led::led_task;
 
+use animation::INTRO;
 use buttons::try_get_code;
 use defmt::info;
 use embassy_time::Timer;
@@ -90,10 +92,7 @@ impl Game {
                 let _ = no_snake.insert(Coordinate { row, col });
             }
         }
-
-        // TODO add seed
-        let rnd = Random::new(1234);
-
+        let rnd = Random::new(embassy_time::Instant::now().as_ticks() as i64);
         let mut game = Game {
             direction: Direction::North,
             snake,
@@ -142,7 +141,6 @@ impl Game {
 
     fn get_new_head_coordinate(&self) -> Coordinate {
         let head = self.snake.peek_head();
-        // info!("head is {} {}", head.row, head.col);
         match self.direction {
             Direction::Ost => Coordinate {
                 row: head.row,
@@ -169,7 +167,6 @@ impl Game {
 
     fn do_move(&mut self) -> Result<MoveResult, SnakeError> {
         let new_head = self.get_new_head_coordinate();
-        // info!("new_head is {} {}", new_head.row, new_head.col);
         if self.is_snake(new_head) {
             Ok(MoveResult::BiteYourself)
         } else {
@@ -223,6 +220,7 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(btn_task(r.btn_b_pin.btn_pin.into(), ButtonCode::PressedB)));
     loop {
         let mut game = Game::new();
+        INTRO.playback().await;
 
         info!("Schhhh");
         loop {

@@ -75,17 +75,17 @@ impl<'a> LedMatrix<'a, 5, 5> {
 pub enum PixelState {
     #[default]
     Off,
-    Solid(i32),
+    Solid(u16),
     Blinking(BlinkingPixel<0, 1000, 100>),
 }
 
 #[derive(Default, Debug, Clone, Copy)]
-pub struct BlinkingPixel<const MIN: i32, const MAX: i32, const STEP: i32> {
+pub struct BlinkingPixel<const MIN: i16, const MAX: i16, const STEP: i16> {
     fading: bool,
-    brightness: i32,
+    brightness: i16,
 }
 
-impl<const MIN: i32, const MAX: i32, const STEP: i32> BlinkingPixel<MIN, MAX, STEP> {
+impl<const MIN: i16, const MAX: i16, const STEP: i16> BlinkingPixel<MIN, MAX, STEP> {
     pub fn new() -> Self {
         BlinkingPixel {
             fading: true,
@@ -142,6 +142,8 @@ pub enum CellState {
     SnakeHead,
     SnakeTail,
     Food,
+    AnimationStatic(u16),
+    AnimationFading,
 }
 
 impl Snapshot<5, 5> {
@@ -182,6 +184,8 @@ impl Render {
                             PixelState::Blinking(BlinkingPixel::new())
                         }
                     }
+                    CellState::AnimationStatic(brightness) => PixelState::Solid(brightness),
+                    CellState::AnimationFading => PixelState::Blinking(BlinkingPixel::new()),
                 }
             }
         }
