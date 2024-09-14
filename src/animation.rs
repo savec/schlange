@@ -25,7 +25,7 @@ where
     }
 }
 
-type IntroType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 3>;
+type IntroType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 4>;
 
 pub static INTRO: IntroType = Animation {
     seq: [
@@ -154,6 +154,48 @@ pub static INTRO: IntroType = Animation {
                 ],
             },
             delay: 500,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                ],
+            },
+            delay: 100,
         },
     ],
     cb: send_snapshot,

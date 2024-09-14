@@ -3,6 +3,7 @@
 
 mod animation;
 mod buttons;
+mod difficulty;
 mod fmt;
 mod led;
 mod rb;
@@ -13,6 +14,7 @@ use crate::led::led_task;
 
 use animation::INTRO;
 use buttons::try_get_code;
+use difficulty::DifficultySelector;
 use embassy_time::Timer;
 use fmt::unwrap;
 use heapless::FnvIndexSet;
@@ -218,9 +220,18 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(btn_task(r.btn_a_pin.btn_pin.into(), ButtonCode::PressedA)));
     unwrap!(spawner.spawn(btn_task(r.btn_b_pin.btn_pin.into(), ButtonCode::PressedB)));
     loop {
-        let mut game = Game::new();
         INTRO.playback().await;
-
+        let mut difficulty_selector = DifficultySelector::new();
+        loop {
+            if let Some(btn_signal) = try_get_code() {
+                if let Some(_) = difficulty_selector.is_choise_made(btn_signal) {
+                    break;
+                }
+            }
+            send_snapshot(&difficulty_selector.get_snapshot());
+            Timer::after_millis(100).await;
+        }
+        let mut game = Game::new();
         loop {
             if let Some(btn_signal) = try_get_code() {
                 game.update_direction(btn_signal);
@@ -239,7 +250,7 @@ async fn main(spawner: Spawner) {
                 break;
             }
             send_snapshot(&game.get_snapshot());
-            Timer::after_millis(500).await;
+            Timer::after_millis(difficulty_selector.get_turn_delay_ms()).await;
         }
     }
 }
