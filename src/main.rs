@@ -236,18 +236,17 @@ async fn main(spawner: Spawner) {
             if let Some(btn_signal) = try_get_code() {
                 game.update_direction(btn_signal);
             }
-            if let Ok(res) = game.do_move() {
-                match res {
-                    MoveResult::BiteYourself => {
-                        break;
-                    }
-                    MoveResult::Win => {
-                        break;
-                    }
-                    _ => (),
+            let res = game.do_move().unwrap();
+            match res {
+                MoveResult::BiteYourself => {
+                    // TODO: defeat animation
+                    break;
                 }
-            } else {
-                break;
+                MoveResult::Win => {
+                    // TODO: win animation
+                    break;
+                }
+                _ => (),
             }
             send_snapshot(&game.get_snapshot());
             Timer::after_millis(difficulty_selector.get_turn_delay_ms()).await;
