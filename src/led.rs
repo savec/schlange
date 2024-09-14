@@ -57,12 +57,24 @@ impl<'a> LedMatrix<'a, 5, 5> {
                         Timer::after_micros(1000 - l as u64).await;
                     }
                     PixelState::Blinking(mut state) => {
-                        row_led.set_high();
-                        Timer::after_micros(state.brightness as u64).await;
-                        row_led.set_low();
+                        if state.brightness > 0 {
+                            row_led.set_high();
+                            Timer::after_micros(state.brightness as u64).await;
+                            row_led.set_low();
+                        }
                         Timer::after_micros(1000 - state.brightness as u64).await;
                         state.process();
                         *frame_row = PixelState::Blinking(state);
+                    }
+                    PixelState::Fading(mut state) => {
+                        if state.brightness > 0 {
+                            row_led.set_high();
+                            Timer::after_micros(state.brightness as u64).await;
+                            row_led.set_low();
+                        }
+                        Timer::after_micros(1000 - state.brightness as u64).await;
+                        state.process();
+                        *frame_row = PixelState::Fading(state);
                     }
                 };
             }
@@ -77,6 +89,26 @@ pub enum PixelState {
     Off,
     Solid(u16),
     Blinking(BlinkingPixel<0, 1000, 100>),
+    Fading(FadingPixel<1000, 50>),
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct FadingPixel<const MAX: i16, const STEP: i16> {
+    brightness: i16,
+}
+
+impl<const MAX: i16, const STEP: i16> FadingPixel<MAX, STEP> {
+    pub fn new() -> Self {
+        FadingPixel { brightness: MAX }
+    }
+
+    fn process(&mut self) {
+        if self.brightness > STEP {
+            self.brightness -= STEP;
+        } else {
+            self.brightness = 0;
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -185,7 +217,13 @@ impl Render {
                         }
                     }
                     CellState::AnimationStatic(brightness) => PixelState::Solid(brightness),
-                    CellState::AnimationFading => PixelState::Blinking(BlinkingPixel::new()),
+                    CellState::AnimationFading => {
+                        if self.prev_snapshot.buffer[col][row] == CellState::AnimationFading {
+                            current_frame.buffer[col][row]
+                        } else {
+                            PixelState::Fading(FadingPixel::new())
+                        }
+                    }
                 }
             }
         }

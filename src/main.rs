@@ -13,7 +13,6 @@ use crate::led::led_task;
 
 use animation::INTRO;
 use buttons::try_get_code;
-use defmt::info;
 use embassy_time::Timer;
 use fmt::unwrap;
 use heapless::FnvIndexSet;
@@ -222,29 +221,25 @@ async fn main(spawner: Spawner) {
         let mut game = Game::new();
         INTRO.playback().await;
 
-        info!("Schhhh");
         loop {
-            Timer::after_millis(500).await;
             if let Some(btn_signal) = try_get_code() {
                 game.update_direction(btn_signal);
             }
             if let Ok(res) = game.do_move() {
                 match res {
                     MoveResult::BiteYourself => {
-                        info!("BiteYourself");
                         break;
                     }
                     MoveResult::Win => {
-                        info!("Done");
                         break;
                     }
                     _ => (),
                 }
             } else {
-                info!("Fatal");
                 break;
             }
             send_snapshot(&game.get_snapshot());
+            Timer::after_millis(500).await;
         }
     }
 }
