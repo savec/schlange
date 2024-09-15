@@ -14,6 +14,7 @@ use crate::led::led_task;
 
 use animation::DEFEAT;
 use animation::INTRO;
+use animation::VICTORY;
 use buttons::try_get_code;
 use difficulty::DifficultySelector;
 use embassy_time::Timer;
@@ -245,7 +246,7 @@ async fn main(spawner: Spawner) {
                     break;
                 }
                 MoveResult::Win => {
-                    // TODO: win animation
+                    VICTORY.playback().await;
                     break;
                 }
                 _ => (),
