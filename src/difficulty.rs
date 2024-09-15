@@ -5,10 +5,12 @@ use crate::{
 
 #[derive(Default, Clone, Copy)]
 enum Difficulty {
-    #[default]
     Easy,
+    #[default]
     Normal,
     Hard,
+    Insane,
+    Hell,
 }
 
 pub struct DifficultySelector {
@@ -21,7 +23,7 @@ impl DifficultySelector {
             difficulty: Default::default(),
         }
     }
-    pub fn is_choise_made(&mut self, input: ButtonCode) -> Option<()> {
+    pub fn is_choice_made(&mut self, input: ButtonCode) -> Option<()> {
         match input {
             ButtonCode::PressedA => {
                 self.rotate_difficulty();
@@ -35,15 +37,19 @@ impl DifficultySelector {
         self.difficulty = match self.difficulty {
             Difficulty::Easy => Difficulty::Normal,
             Difficulty::Normal => Difficulty::Hard,
-            Difficulty::Hard => Difficulty::Easy,
+            Difficulty::Hard => Difficulty::Insane,
+            Difficulty::Insane => Difficulty::Hell,
+            Difficulty::Hell => Difficulty::Easy,
         };
     }
 
     pub fn get_turn_delay_ms(&self) -> u64 {
         match self.difficulty {
-            Difficulty::Easy => 750,
+            Difficulty::Easy => 1000,
             Difficulty::Normal => 500,
-            Difficulty::Hard => 250,
+            Difficulty::Hard => 400,
+            Difficulty::Insane => 300,
+            Difficulty::Hell => 200,
         }
     }
 
@@ -52,54 +58,47 @@ impl DifficultySelector {
             Difficulty::Easy => Snapshot {
                 buffer: [
                     [
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
                     ],
                 ],
             },
             Difficulty::Normal => Snapshot {
                 buffer: [
                     [
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                    ],
-                    [
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
@@ -107,62 +106,147 @@ impl DifficultySelector {
                     [
                         CellState::Empty,
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
                         CellState::Empty,
-                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
                     ],
                     [
                         CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
-                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
                     ],
                 ],
             },
             Difficulty::Hard => Snapshot {
                 buffer: [
                     [
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                    ],
-                    [
                         CellState::Empty,
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
                     ],
                     [
                         CellState::Empty,
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                ],
+            },
+            Difficulty::Insane => Snapshot {
+                buffer: [
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
                     ],
                     [
                         CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
                         CellState::Empty,
-                        CellState::AnimationStatic(1000),
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                ],
+            },
+            Difficulty::Hell => Snapshot {
+                buffer: [
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
                         CellState::Empty,
                         CellState::Empty,
                     ],
                     [
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
-                        CellState::AnimationStatic(1000),
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                        CellState::AnimationBlinking,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
                     ],
                 ],
             },

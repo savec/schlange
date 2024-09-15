@@ -222,13 +222,14 @@ async fn main(spawner: Spawner) {
     loop {
         INTRO.playback().await;
         let mut difficulty_selector = DifficultySelector::new();
+        send_snapshot(&difficulty_selector.get_snapshot());
         loop {
             if let Some(btn_signal) = try_get_code() {
-                if let Some(_) = difficulty_selector.is_choise_made(btn_signal) {
+                if let Some(_) = difficulty_selector.is_choice_made(btn_signal) {
                     break;
                 }
+                send_snapshot(&difficulty_selector.get_snapshot());
             }
-            send_snapshot(&difficulty_selector.get_snapshot());
             Timer::after_millis(100).await;
         }
         let mut game = Game::new();

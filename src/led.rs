@@ -175,7 +175,8 @@ pub enum CellState {
     SnakeTail,
     Food,
     AnimationStatic(u16),
-    AnimationFading,
+    AnimationFadingInterFrame,
+    AnimationBlinking,
 }
 
 impl Snapshot<5, 5> {
@@ -217,13 +218,16 @@ impl Render {
                         }
                     }
                     CellState::AnimationStatic(brightness) => PixelState::Solid(brightness),
-                    CellState::AnimationFading => {
-                        if self.prev_snapshot.buffer[col][row] == CellState::AnimationFading {
+                    CellState::AnimationFadingInterFrame => {
+                        if self.prev_snapshot.buffer[col][row]
+                            == CellState::AnimationFadingInterFrame
+                        {
                             current_frame.buffer[col][row]
                         } else {
                             PixelState::Fading(FadingPixel::new())
                         }
                     }
+                    CellState::AnimationBlinking => PixelState::Blinking(BlinkingPixel::new()),
                 }
             }
         }
