@@ -222,6 +222,8 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(btn_task(r.btn_a_pin.btn_pin.into(), ButtonCode::PressedA)));
     unwrap!(spawner.spawn(btn_task(r.btn_b_pin.btn_pin.into(), ButtonCode::PressedB)));
     loop {
+        // drain the unwanted signal
+        let _ = try_get_code();
         let mut difficulty_selector = DifficultySelector::new();
         send_snapshot(&difficulty_selector.get_snapshot());
         loop {
