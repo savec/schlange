@@ -12,6 +12,7 @@ use crate::buttons::btn_task;
 use crate::buttons::ButtonCode;
 use crate::led::led_task;
 
+use animation::DEFEAT;
 use animation::INTRO;
 use buttons::try_get_code;
 use difficulty::DifficultySelector;
@@ -220,7 +221,6 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(btn_task(r.btn_a_pin.btn_pin.into(), ButtonCode::PressedA)));
     unwrap!(spawner.spawn(btn_task(r.btn_b_pin.btn_pin.into(), ButtonCode::PressedB)));
     loop {
-        INTRO.playback().await;
         let mut difficulty_selector = DifficultySelector::new();
         send_snapshot(&difficulty_selector.get_snapshot());
         loop {
@@ -232,6 +232,7 @@ async fn main(spawner: Spawner) {
             }
             Timer::after_millis(100).await;
         }
+        INTRO.playback().await;
         let mut game = Game::new();
         loop {
             if let Some(btn_signal) = try_get_code() {
@@ -240,7 +241,7 @@ async fn main(spawner: Spawner) {
             let res = game.do_move().unwrap();
             match res {
                 MoveResult::BiteYourself => {
-                    // TODO: defeat animation
+                    DEFEAT.playback().await;
                     break;
                 }
                 MoveResult::Win => {

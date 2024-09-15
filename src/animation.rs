@@ -26,7 +26,6 @@ where
 }
 
 type IntroType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 4>;
-
 pub static INTRO: IntroType = Animation {
     seq: [
         AnimationFrame {
@@ -150,6 +149,181 @@ pub static INTRO: IntroType = Animation {
                         CellState::AnimationFadingInterFrame,
                         CellState::AnimationFadingInterFrame,
                         CellState::AnimationFadingInterFrame,
+                    ],
+                ],
+            },
+            delay: 500,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                    [
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                    ],
+                ],
+            },
+            delay: 100,
+        },
+    ],
+    cb: send_snapshot,
+};
+
+type DefeatType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 4>;
+pub static DEFEAT: DefeatType = Animation {
+    seq: [
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                ],
+            },
+            delay: 250,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::Empty,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                ],
+            },
+            delay: 250,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
+                        CellState::AnimationFlareUpInterFrame,
                     ],
                 ],
             },

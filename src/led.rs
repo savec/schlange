@@ -76,6 +76,16 @@ impl<'a> LedMatrix<'a, 5, 5> {
                         state.process();
                         *frame_row = PixelState::Fading(state);
                     }
+                    PixelState::FlareUp(mut state) => {
+                        if state.brightness > 0 {
+                            row_led.set_high();
+                            Timer::after_micros(state.brightness as u64).await;
+                            row_led.set_low();
+                        }
+                        Timer::after_micros(1000 - state.brightness as u64).await;
+                        state.process();
+                        *frame_row = PixelState::FlareUp(state);
+                    }
                 };
             }
             col_led.set_high();
@@ -90,6 +100,26 @@ pub enum PixelState {
     Solid(u16),
     Blinking(BlinkingPixel<0, 1000, 100>),
     Fading(FadingPixel<1000, 50>),
+    FlareUp(FlareUpPixel<1000, 50>),
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct FlareUpPixel<const MAX: i16, const STEP: i16> {
+    brightness: i16,
+}
+
+impl<const MAX: i16, const STEP: i16> FlareUpPixel<MAX, STEP> {
+    pub fn new() -> Self {
+        FlareUpPixel { brightness: 0 }
+    }
+
+    fn process(&mut self) {
+        if self.brightness < MAX {
+            self.brightness += STEP;
+        } else {
+            self.brightness = MAX;
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -176,6 +206,7 @@ pub enum CellState {
     Food,
     AnimationStatic(u16),
     AnimationFadingInterFrame,
+    AnimationFlareUpInterFrame,
     AnimationBlinking,
 }
 
@@ -228,6 +259,15 @@ impl Render {
                         }
                     }
                     CellState::AnimationBlinking => PixelState::Blinking(BlinkingPixel::new()),
+                    CellState::AnimationFlareUpInterFrame => {
+                        if self.prev_snapshot.buffer[col][row]
+                            == CellState::AnimationFlareUpInterFrame
+                        {
+                            current_frame.buffer[col][row]
+                        } else {
+                            PixelState::FlareUp(FlareUpPixel::new())
+                        }
+                    }
                 }
             }
         }
