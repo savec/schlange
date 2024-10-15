@@ -10,7 +10,7 @@ pub static SNAPSHOT_SIGNAL: Signal<CriticalSectionRawMutex, Snapshot<5, 5>> = Si
 struct LedMatrix<'a, const NCOLS: usize, const NROWS: usize> {
     cols: [Output<'a>; NCOLS],
     rows: [Output<'a>; NROWS],
-    frame: Frame<5, 5>,
+    frame: Frame<NCOLS, NROWS>,
 }
 
 impl<'a> LedMatrix<'a, 5, 5> {
