@@ -200,7 +200,7 @@ pub static INTRO: IntroType = Animation {
     cb: send_snapshot,
 };
 
-type DefeatType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 4>;
+type DefeatType = Animation<for<'a> fn(&'a led::Snapshot<5, 5>), 7>;
 pub static DEFEAT: DefeatType = Animation {
     seq: [
         AnimationFrame {
@@ -324,6 +324,132 @@ pub static DEFEAT: DefeatType = Animation {
                         CellState::AnimationFlareUpInterFrame,
                         CellState::AnimationFlareUpInterFrame,
                         CellState::AnimationFlareUpInterFrame,
+                    ],
+                ],
+            },
+            delay: 500,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                    ],
+                    [
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                    ],
+                    [
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                ],
+            },
+            delay: 500,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationStatic(1000),
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                ],
+            },
+            delay: 500,
+        },
+        AnimationFrame {
+            snapshot: Snapshot {
+                buffer: [
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                    ],
+                    [
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
+                        CellState::AnimationFadingInterFrame,
                     ],
                 ],
             },
